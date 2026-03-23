@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AndyTV - Canales de Argentina</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AndyTV">
+    <meta name="theme-color" content="#ff3366">
+    <meta name="description" content="Canales de Argentina en vivo para tu TV">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- HLS.js para compatibilidad -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📺 AndyTV</h1>
+            <p>Canales de Argentina · En vivo</p>
+            
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="🔍 Buscar canal..." autocomplete="off">
+                <button id="clearSearch" class="clear-btn" style="display: none;">✖</button>
+            </div>
+            
+            <div class="status" id="status">Cargando canales...</div>
+        </header>
+
+        <div class="main-layout">
+            <aside class="channel-list" id="channelList">
+                <div class="loading">Cargando...</div>
+            </aside>
+
+            <main class="player-area">
+                <div class="player-container" id="playerContainer">
+                    <video id="videoPlayer" controls autoplay playsinline>
+                        <source src="" type="video/mp4">
+                        Tu navegador no soporta reproducción de video.
+                    </video>
+                    <div class="no-channel-message" id="noChannelMessage">
+                        📺 Seleccioná un canal para comenzar
+                    </div>
+                    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+                        <div class="spinner"></div>
+                        <span>Cargando stream...</span>
+                    </div>
+                </div>
+                <div class="current-channel" id="currentChannel">
+                    <span class="label">🎬 Reproduciendo:</span>
+                    <span class="name">Ninguno</span>
+                </div>
+            </main>
+        </div>
+
+        <footer>
+            <p>Fuente: <a href="https://iptv-org.github.io/" target="_blank">iptv-org</a> | Canales gratuitos de emisión abierta</p>
+            <p class="tv-tip">💡 En tu TV: agregá a la pantalla de inicio desde el navegador</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
