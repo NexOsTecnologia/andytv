@@ -1,70 +1,5 @@
-// ========== MÚLTIPLES FUENTES DE LISTAS M3U ==========
-const SOURCES = [
-    {
-        name: 'Argentina IPTV',
-        url: 'https://iptv-org.github.io/iptv/countries/ar.m3u',
-        enabled: true
-    },
-    {
-        name: 'Canales Argentina (YouTube)',
-        url: 'https://abskmj.github.io/iptv-youtube-live/spanish.m3u8',
-        enabled: true
-    },
-    {
-        name: 'Deportes',
-        url: 'https://iptv-org.github.io/iptv/categories/sports.m3u',
-        enabled: true
-    },
-    {
-        name: 'Películas',
-        url: 'https://iptv-org.github.io/iptv/categories/movies.m3u',
-        enabled: true
-    },
-    {
-        name: 'Entretenimiento',
-        url: 'https://iptv-org.github.io/iptv/categories/entertainment.m3u',
-        enabled: true
-    },
-    {
-        name: 'Pluto TV (gratis)',
-        url: 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8',
-        enabled: true
-    }
-];
-
-// Canales personalizados de YouTube (agregados manualmente)
-const CUSTOM_CHANNELS = [
-    {
-        name: 'C5N',
-        logo: 'https://i.imgur.com/0jK7kqj.png',
-        group: 'Argentina Noticias',
-        url: 'https://ythls-v3.onrender.com/video/HFAW-7pMibc.m3u8'
-    },
-    {
-        name: 'A24',
-        logo: 'https://i.imgur.com/4Lc7qY8.png',
-        group: 'Argentina Noticias',
-        url: 'https://ythls-v3.onrender.com/video/SmvmdBNK-SM.m3u8'
-    },
-    {
-        name: 'AR12 (TN)',
-        logo: 'https://i.imgur.com/JxTlGfK.png',
-        group: 'Argentina Noticias',
-        url: 'https://ythls-v3.onrender.com/video/ZNqtZkYqk_Y.m3u8'
-    },
-    {
-        name: 'La Nación+',
-        logo: 'https://i.imgur.com/1wQdRjL.png',
-        group: 'Argentina Noticias',
-        url: 'https://ythls-v3.onrender.com/video/dQeS5qQw7wI.m3u8'
-    },
-    {
-        name: 'TyC Sports (muestra)',
-        logo: 'https://i.imgur.com/ZlKqQYq.png',
-        group: 'Deportes',
-        url: 'https://ythls-v3.onrender.com/video/PuYbQlCq0Bc.m3u8'
-    }
-];
+// URL de la lista M3U de Argentina
+const M3U_URL = 'https://iptv-org.github.io/iptv/countries/ar.m3u';
 
 // Elementos del DOM
 const channelListElement = document.getElementById('channelList');
@@ -77,13 +12,16 @@ const clearSearchBtn = document.getElementById('clearSearch');
 const loadingOverlay = document.getElementById('loadingOverlay');
 
 // Almacenar canales y estado
+let channels = [];
 let allChannels = [];
 let currentFilter = 'all';
 let currentSearchTerm = '';
 let favorites = new Set();
 let hls = null;
+let currentStreamUrl = '';
+let currentStreamFormat = '';
 
-// Proxy CORS (solo para streams que lo necesiten)
+// Proxy CORS gratuito
 const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
 
 // ========== FUNCIONES DE FAVORITOS ==========
@@ -106,6 +44,7 @@ function saveFavorites() {
 
 function toggleFavorite(globalIndex, event) {
     event.stopPropagation();
+    
     if (favorites.has(globalIndex)) {
         favorites.delete(globalIndex);
     } else {
@@ -121,21 +60,29 @@ function detectStreamFormat(url) {
     const lowerUrl = url.toLowerCase();
     if (lowerUrl.endsWith('.m3u8') || lowerUrl.includes('.m3u8?')) return 'hls';
     if (lowerUrl.endsWith('.mp4') || lowerUrl.includes('.mp4?')) return 'mp4';
+    if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) return 'youtube';
+    if (lowerUrl.includes('twitch.tv')) return 'twitch';
     return 'direct';
 }
 
+// Verificar si una URL necesita proxy
 function needsProxy(url) {
-    const blockedDomains = ['qaotic.net', 'prepublish'];
+    const blockedDomains = ['qaotic.net', 'america', 'prepublish', 'f.qaotic'];
     return blockedDomains.some(domain => url.toLowerCase().includes(domain));
 }
 
+// Función principal de reproducción CORREGIDA
 function playStream(originalUrl) {
     return new Promise((resolve, reject) => {
+        // Determinar si usar proxy
         const useProxy = needsProxy(originalUrl);
         const finalUrl = useProxy ? CORS_PROXY + originalUrl : originalUrl;
         
-        if (useProxy) console.log('🔄 Usando proxy CORS para:', originalUrl);
+        if (useProxy) {
+            console.log('🔄 Usando proxy CORS para:', originalUrl);
+        }
         
+        // Detener reproducción anterior
         if (hls) {
             hls.destroy();
             hls = null;
@@ -146,8 +93,12 @@ function playStream(originalUrl) {
         videoPlayer.load();
         
         const format = detectStreamFormat(originalUrl);
-        console.log(`📺 Reproduciendo: ${originalUrl} (formato: ${format})`);
+        currentStreamUrl = originalUrl;
+        currentStreamFormat = format;
         
+        console.log(`📺 Reproduciendo: ${originalUrl} (formato: ${format})${useProxy ? ' [via proxy]' : ''}`);
+        
+        // Badge de formato
         let badge = document.querySelector('.stream-format-badge');
         if (!badge) {
             badge = document.createElement('div');
@@ -156,27 +107,55 @@ function playStream(originalUrl) {
         }
         badge.textContent = format.toUpperCase() + (useProxy ? ' 🔄' : '');
         
+        // Reproducción según formato
         if (format === 'hls' && Hls.isSupported()) {
+            // Usar HLS.js
             hls = new Hls({
                 enableWorker: true,
                 lowLatencyMode: true,
-                maxBufferLength: 30
+                maxBufferLength: 30,
+                maxMaxBufferLength: 60
             });
+            
+            // Configurar xhr para que los segmentos también usen proxy si es necesario
+            if (useProxy) {
+                hls.on(Hls.Events.XHR_SETUP, (event, xhrSetup) => {
+                    xhrSetup.xhr.setRequestHeader('Origin', window.location.origin);
+                });
+            }
             
             hls.loadSource(finalUrl);
             hls.attachMedia(videoPlayer);
             
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                videoPlayer.play().then(() => resolve(true)).catch(reject);
+                console.log('✅ Manifest HLS cargado');
+                videoPlayer.play()
+                    .then(() => resolve(true))
+                    .catch(reject);
             });
             
             hls.on(Hls.Events.ERROR, (event, data) => {
-                if (data.fatal) reject(new Error(`Error HLS: ${data.type}`));
+                console.error('❌ Error HLS:', data);
+                if (data.fatal) {
+                    reject(new Error(`Error HLS: ${data.type}`));
+                }
             });
-        } else {
+            
+        } else if (format === 'hls' && !Hls.isSupported()) {
+            // Safari (HLS nativo)
             videoPlayer.src = finalUrl;
             videoPlayer.load();
-            videoPlayer.play().then(() => resolve(true)).catch(reject);
+            videoPlayer.play()
+                .then(() => resolve(true))
+                .catch(reject);
+                
+        } else {
+            // MP4 o stream directo
+            videoPlayer.src = finalUrl;
+            videoPlayer.load();
+            videoPlayer.play()
+                .then(() => resolve(true))
+                .catch(reject);
         }
     });
 }
@@ -208,47 +187,37 @@ async function parseM3U(content) {
             currentChannel = {};
         }
     }
+    
     return channelsArray;
 }
 
-// ========== CARGAR TODAS LAS FUENTES ==========
-async function loadAllChannels() {
-    allChannels = [];
-    
-    // 1. Agregar canales personalizados de YouTube
-    CUSTOM_CHANNELS.forEach(channel => {
-        allChannels.push({ ...channel });
-    });
-    
-    // 2. Cargar cada fuente M3U
-    for (const source of SOURCES) {
-        if (!source.enabled) continue;
+// ========== CARGA DE CANALES ==========
+async function loadChannels() {
+    try {
+        statusElement.textContent = '📡 Descargando lista de canales...';
+        statusElement.style.color = '#ffaa33';
         
-        try {
-            statusElement.textContent = `📡 Cargando ${source.name}...`;
-            const response = await fetch(source.url);
-            const m3uContent = await response.text();
-            const channelsFromSource = await parseM3U(m3uContent);
-            
-            // Agregar los canales con un prefijo en el grupo
-            channelsFromSource.forEach(ch => {
-                ch.source = source.name;
-                // No duplicar grupo si ya tiene uno
-                if (!ch.group || ch.group === 'General') {
-                    ch.group = source.name;
-                }
-                allChannels.push(ch);
-            });
-            
-            console.log(`✅ ${source.name}: ${channelsFromSource.length} canales`);
-        } catch (error) {
-            console.error(`❌ Error cargando ${source.name}:`, error);
-        }
+        const response = await fetch(M3U_URL);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const m3uContent = await response.text();
+        statusElement.textContent = '⚙️ Procesando lista de canales...';
+        
+        allChannels = await parseM3U(m3uContent);
+        
+        if (allChannels.length === 0) throw new Error('No se encontraron canales');
+        
+        statusElement.textContent = `✅ ${allChannels.length} canales cargados correctamente`;
+        statusElement.style.color = '#4caf50';
+        
+        renderFilteredChannels();
+        
+    } catch (error) {
+        console.error('Error:', error);
+        statusElement.textContent = `❌ Error: ${error.message}`;
+        statusElement.style.color = '#ff6666';
+        channelListElement.innerHTML = `<div class="loading">Error al cargar canales. Verifica tu conexión.</div>`;
     }
-    
-    statusElement.textContent = `✅ ${allChannels.length} canales cargados correctamente`;
-    statusElement.style.color = '#4caf50';
-    renderFilteredChannels();
 }
 
 // ========== FILTRADO Y RENDERIZADO ==========
@@ -259,7 +228,7 @@ function getFilteredChannels() {
         const term = currentSearchTerm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         result = result.filter(channel => {
             const name = channel.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            const group = (channel.group || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const group = channel.group.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             return name.includes(term) || group.includes(term);
         });
     }
@@ -303,6 +272,7 @@ function renderFilteredChannels() {
             const originalIndex = allChannels.findIndex(c => c.name === channel.name && c.url === channel.url);
             const isFavorite = favorites.has(originalIndex);
             const firstLetter = channel.name.charAt(0).toUpperCase();
+            const needsProxyFlag = needsProxy(channel.url);
             
             html += `
                 <div class="channel-item" data-original-index="${originalIndex}">
@@ -323,6 +293,7 @@ function renderFilteredChannels() {
     
     channelListElement.innerHTML = html;
     
+    // Event listeners
     document.querySelectorAll('.channel-item').forEach(item => {
         const originalIndex = parseInt(item.dataset.originalIndex);
         
@@ -363,7 +334,7 @@ async function playChannel(globalIndex) {
     if (noChannelMessage) noChannelMessage.style.display = 'none';
     
     currentChannelName.textContent = channel.name;
-    document.title = `🎸 Reproduciendo: ${channel.name} - AndyTV`;
+    document.title = `🎸 Reproduciendo: ${channel.name} - AndyTV IPTV`;
     statusElement.textContent = `🔄 Cargando stream: ${channel.name}...`;
     statusElement.style.color = '#ffaa33';
     
@@ -373,13 +344,36 @@ async function playChannel(globalIndex) {
         statusElement.style.color = '#4caf50';
     } catch (error) {
         console.error('Error reproduciendo:', error);
-        statusElement.textContent = `❌ No se pudo reproducir ${channel.name}`;
+        statusElement.textContent = `❌ No se pudo reproducir ${channel.name}. El formato puede no ser compatible.`;
         statusElement.style.color = '#ff6666';
+        
+        // Fallback: intentar sin proxy
+        if (needsProxy(channel.url)) {
+            try {
+                console.log('🔄 Intentando sin proxy como fallback...');
+                await playStreamDirect(channel.url);
+                statusElement.textContent = `✅ Reproduciendo (modo directo): ${channel.name}`;
+            } catch (fallbackError) {
+                console.error('Fallback también falló:', fallbackError);
+            }
+        }
     } finally {
         if (loadingOverlay) loadingOverlay.style.display = 'none';
     }
 }
 
+// Fallback sin proxy
+function playStreamDirect(url) {
+    return new Promise((resolve, reject) => {
+        videoPlayer.src = url;
+        videoPlayer.load();
+        videoPlayer.play()
+            .then(() => resolve(true))
+            .catch(reject);
+    });
+}
+
+// ========== UTILIDADES ==========
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -398,6 +392,7 @@ function clearSearch() {
     searchInput.focus();
 }
 
+// ========== EVENT LISTENERS ==========
 searchInput.addEventListener('input', handleSearch);
 clearSearchBtn.addEventListener('click', clearSearch);
 
@@ -412,6 +407,6 @@ videoPlayer.addEventListener('error', (e) => {
 
 // ========== INICIALIZAR ==========
 loadFavorites();
-loadAllChannels();
+loadChannels();
 
-console.log('🎬 AndyTV iniciado - Con canales de Argentina, YouTube, deportes y películas');
+console.log('🎬 AndyTV IPTV iniciado - Con soporte para streams bloqueados vía proxy');
