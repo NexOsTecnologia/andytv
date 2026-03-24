@@ -16,13 +16,8 @@ const SOURCES = [
         enabled: true
     },
     {
-        name: 'Películas (IPTV-org)',
+        name: 'Películas',
         url: 'https://iptv-org.github.io/iptv/categories/movies.m3u',
-        enabled: true
-    },
-    {
-        name: 'Series (IPTV-org)',
-        url: 'https://iptv-org.github.io/iptv/categories/series.m3u',
         enabled: true
     },
     {
@@ -35,38 +30,12 @@ const SOURCES = [
         url: 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8',
         enabled: true
     },
-    {
-        name: 'Todos TV (gratis)',
+{
+        name: 'todos TV (gratis)',
         url: 'https://iptv-org.github.io/iptv/index.m3u',
         enabled: true
-    },
-    // ========== NUEVAS FUENTES LEGALES DE PLEX ==========
-    {
-        name: 'Plex Movies (gratis)',
-        url: 'https://i.mjh.nz/Plex/movies.m3u8',
-        enabled: true
-    },
-    {
-        name: 'Plex TV Series (gratis)',
-        url: 'https://i.mjh.nz/Plex/tv.m3u8',
-        enabled: true
-    },
-    {
-        name: 'Plex Latino',
-        url: 'https://i.mjh.nz/Plex/latino.m3u8',
-        enabled: true
-    },
-    // ========== CONTENIDO GRATUITO ADICIONAL ==========
-    {
-        name: 'Samsung TV Plus (gratis)',
-        url: 'https://raw.githubusercontent.com/iptv-org/iptv/master/stream/samsungtvplus_us.m3u',
-        enabled: true
-    },
-    {
-        name: 'Canales de Películas (gratis)',
-        url: 'https://raw.githubusercontent.com/iptv-org/iptv/master/stream/movies.m3u',
-        enabled: true
     }
+    
 ];
 
 // Canales personalizados de YouTube (agregados manualmente)
@@ -100,25 +69,6 @@ const CUSTOM_CHANNELS = [
         logo: 'https://i.imgur.com/ZlKqQYq.png',
         group: 'Deportes',
         url: 'https://ythls-v3.onrender.com/video/PuYbQlCq0Bc.m3u8'
-    },
-    // ========== CANALES DE PLEX DESTACADOS ==========
-    {
-        name: 'Plex Movies (Destacados)',
-        logo: 'https://i.imgur.com/placeholder.png',
-        group: 'Plex | Películas',
-        url: 'https://i.mjh.nz/Plex/movies.m3u8'
-    },
-    {
-        name: 'Plex TV Series (Destacados)',
-        logo: 'https://i.imgur.com/placeholder.png',
-        group: 'Plex | Series',
-        url: 'https://i.mjh.nz/Plex/tv.m3u8'
-    },
-    {
-        name: 'Plex Latino',
-        logo: 'https://i.imgur.com/placeholder.png',
-        group: 'Plex | Latino',
-        url: 'https://i.mjh.nz/Plex/latino.m3u8'
     }
 ];
 
@@ -271,7 +221,7 @@ async function parseM3U(content) {
 async function loadAllChannels() {
     allChannels = [];
     
-    // 1. Agregar canales personalizados de YouTube y Plex
+    // 1. Agregar canales personalizados de YouTube
     CUSTOM_CHANNELS.forEach(channel => {
         allChannels.push({ ...channel });
     });
@@ -470,4 +420,4 @@ videoPlayer.addEventListener('error', (e) => {
 loadFavorites();
 loadAllChannels();
 
-console.log('🎬 AndyTV iniciado - Con canales de Argentina, YouTube, Plex (películas y series) y más');
+console.log('🎬 AndyTV iniciado - Con canales de Argentina, YouTube, deportes y películas');
