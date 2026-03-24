@@ -29,7 +29,13 @@ const SOURCES = [
         name: 'Pluto TV (gratis)',
         url: 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8',
         enabled: true
+    },
+{
+        name: 'todos TV (gratis)',
+        url: 'https://iptv-org.github.io/iptv/index.m3u',
+        enabled: true
     }
+    
 ];
 
 // Canales personalizados de YouTube (agregados manualmente)
