@@ -64,7 +64,15 @@ const SOURCES = [
         name: 'Canales de Películas (gratis)',
         url: 'https://raw.githubusercontent.com/iptv-org/iptv/master/stream/movies.m3u',
         enabled: true
+    },
+    
+    // ... fuentes existentes
+    {
+        name: 'Pluto TV (Free-TV)',
+        url: 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8',
+        enabled: true
     }
+];
 ];
 
 // Canales personalizados (solo los de YouTube que funcionan)
