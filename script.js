@@ -73,7 +73,7 @@ const SOURCES = [
         enabled: true
     }
 ];
-];
+
 
 // Canales personalizados (solo los de YouTube que funcionan)
 const CUSTOM_CHANNELS = [
