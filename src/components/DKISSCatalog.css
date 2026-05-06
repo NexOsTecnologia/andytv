@@ -1,0 +1,115 @@
+/* Estilos para la vista de episodios de La Ley y el Orden */
+.episodes-container {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.episodes-header {
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #ff3366;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.episodes-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.episodes-subtitle {
+  color: #888;
+  font-size: 13px;
+}
+
+.episodes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.episode-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.episode-card:hover {
+  transform: translateY(-4px);
+  background: #222;
+}
+
+.episode-number {
+  font-size: 12px;
+  color: #ff3366;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.episode-title {
+  font-size: 14px;
+  color: white;
+  margin-bottom: 16px;
+}
+
+.play-episode-btn {
+  background: #ff3366;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.2s;
+}
+
+.play-episode-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loading-spinner-small {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Tarjeta especial de La Ley y el Orden */
+.law-order-card {
+  border: 1px solid #ff3366;
+  background: linear-gradient(135deg, #1a1a1a, #1a1a2a);
+}
+
+.law-order-thumb {
+  background: linear-gradient(135deg, #2a1a1a, #1a1a2a);
+}
+
+.law-order-btn {
+  background: #ff3366 !important;
+  color: white !important;
+}
+
+.law-order-btn:hover {
+  opacity: 0.9;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

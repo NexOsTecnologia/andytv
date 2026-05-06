@@ -73,3 +73,81 @@
 .no-channel p {
   font-size: 18px;
 }
+/* Selector de episodios estilo Netflix */
+.episodes-selector {
+  height: 100%;
+  overflow-y: auto;
+  padding: 24px;
+  background: linear-gradient(135deg, #0a0a0a 0%, #111 100%);
+}
+
+.episodes-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.episodes-header h2 {
+  font-size: 1.8rem;
+  background: linear-gradient(135deg, #ff3366, #ff6b6b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 8px;
+}
+
+.episodes-header p {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.episodes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.episode-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.episode-card:hover {
+  transform: translateY(-4px);
+  background: #222;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.episode-number {
+  font-size: 14px;
+  color: #ff3366;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.episode-title {
+  font-size: 15px;
+  color: white;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.play-episode-btn {
+  background: #ff3366;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.2s;
+  font-weight: bold;
+}
+
+.play-episode-btn:hover {
+  opacity: 0.8;
+}

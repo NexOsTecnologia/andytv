@@ -1,12 +1,13 @@
-// Tipos para los canales
 export interface Channel {
   id: string;
   name: string;
   group: string;
   url: string;
-  type: 'hls' | 'dash';
-  logo?: string;
-  isFavorite?: boolean;
+ type: 'hls' | 'dash' | 'udp' | 'youtube' | 'iframe' ;
+   logo?: string;
+  userAgent?: string;
+  referrer?: string;
+  fallbackUrls?: string[];
 }
 
 export interface ChannelGroup {

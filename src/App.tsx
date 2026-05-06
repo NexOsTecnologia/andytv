@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChannelList } from './components/ChannelList';
 import { VideoPlayer } from './components/VideoPlayer';
-import { SeriesSection } from './components/SeriesSection';
+import { SeriesHub } from './components/SeriesHub';
 import { useChannels } from './hooks/useChannels';
 import { Channel } from './types';
 import './App.css';
@@ -13,12 +13,6 @@ function App() {
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<TabType>('tv');
-  
-  // Estado para el reproductor de series
-  const [seriesUrl, setSeriesUrl] = useState<string | null>(null);
-  const [seriesTitle, setSeriesTitle] = useState<string | null>(null);
-  const [isPlaylist, setIsPlaylist] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Cargar favoritos guardados
   useEffect(() => {
@@ -39,9 +33,6 @@ function App() {
 
   const handleSelectChannel = (channel: Channel) => {
     setCurrentChannel(channel);
-    // Limpiar reproductor de series cuando se selecciona un canal
-    setSeriesUrl(null);
-    setSeriesTitle(null);
   };
 
   const handleToggleFavorite = (channelId: string) => {
@@ -60,83 +51,56 @@ function App() {
     console.error('Video error:', error);
   };
 
-  // Manejar reproducción de series
-  const handlePlaySerie = (url: string, title: string, isPlaylistMode: boolean = false) => {
-    setSeriesUrl(url);
-    setSeriesTitle(title);
-    setIsPlaylist(isPlaylistMode);
-    // Si hay un canal reproduciéndose, no lo interrumpimos
+  // Manejar cambio de canal desde el VideoPlayer (para series_hub y series)
+  const handleChannelChange = (newChannel: Channel) => {
+    setCurrentChannel(newChannel);
+    // Cambiar automáticamente a la pestaña de TV para ver la reproducción
+    if (activeTab !== 'tv') {
+      setActiveTab('tv');
+    }
   };
 
-  // Función para obtener el embed URL de YouTube
-  const getYouTubeEmbedUrl = (url: string): string | null => {
-    // Extraer ID de YouTube
-    const videoMatch = url.match(/(?:youtube\.com\/watch\?v=)([^&]+)|(?:youtu\.be\/)([^?]+)/);
-    if (videoMatch) {
-      const videoId = videoMatch[1] || videoMatch[2];
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-    }
-    
-    const playlistMatch = url.match(/[&?]list=([^&]+)/);
-    if (playlistMatch) {
-      return `https://www.youtube.com/embed/videoseries?list=${playlistMatch[1]}&autoplay=1`;
-    }
-    
-    return null;
-  };
-
+  // Mostrar loading mientras carga
   if (isLoading) {
     return (
       <div className="app loading-screen">
         <div className="spinner"></div>
-        <p>Cargando canales...</p>
+        <p>Cargando canales... ({channels.length} encontrados)</p>
       </div>
     );
   }
+
+  // Mostrar error si no hay canales
+  if (channels.length === 0 && !loadError) {
+    return (
+      <div className="app loading-screen">
+        <div className="error-icon">⚠️</div>
+        <p>No se encontraron canales</p>
+        <small>Verifica tu conexión a internet</small>
+      </div>
+    );
+  }
+
+  console.log(`🎬 App cargada con ${channels.length} canales`);
 
   return (
     <div className="app">
       <header className="app-header">
         <h1>📺 AndyTV</h1>
-        <p>Canales de Argentina · Series · Contenido en vivo</p>
+        <p>{channels.length} canales · Series · Contenido bajo demanda</p>
         
-        {/* Tabs de navegación */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '16px' }}>
+        <div className="tab-buttons">
           <button
-            onClick={() => {
-              setActiveTab('tv');
-              setSeriesUrl(null);
-            }}
-            style={{
-              padding: '10px 24px',
-              borderRadius: '30px',
-              border: 'none',
-              background: activeTab === 'tv' ? '#ff3366' : '#1e1e1e',
-              color: '#fff',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '14px'
-            }}
+            className={`tab-btn ${activeTab === 'tv' ? 'active' : ''}`}
+            onClick={() => setActiveTab('tv')}
           >
-            📺 Canales TV
+            📺 Canales TV ({channels.length})
           </button>
           <button
-            onClick={() => {
-              setActiveTab('series');
-              setCurrentChannel(null);
-            }}
-            style={{
-              padding: '10px 24px',
-              borderRadius: '30px',
-              border: 'none',
-              background: activeTab === 'series' ? '#ff3366' : '#1e1e1e',
-              color: '#fff',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '14px'
-            }}
+            className={`tab-btn ${activeTab === 'series' ? 'active' : ''}`}
+            onClick={() => setActiveTab('series')}
           >
-            🎬 Series
+            🎬 Series y Programas
           </button>
         </div>
       </header>
@@ -154,89 +118,32 @@ function App() {
               />
             </aside>
             <main className="player-area">
-              <VideoPlayer channel={currentChannel} onError={handleVideoError} />
+              <VideoPlayer 
+                channel={currentChannel} 
+                onError={handleVideoError}
+                onChannelChange={handleChannelChange}
+              />
               <div className="current-channel-info">
                 <span className="label">🎬 Reproduciendo:</span>
                 <span className="name">
-                  {currentChannel ? currentChannel.name : 'Ninguno'}
+                  {currentChannel ? currentChannel.name : 'Seleccioná un canal o serie'}
                 </span>
               </div>
             </main>
           </>
         ) : (
-          <main style={{ flex: 1, minHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
-            {/* Reproductor de series (si hay una seleccionada) */}
-            {seriesUrl && (
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{
-                  background: '#111',
-                  borderRadius: '16px',
-                  overflow: 'hidden',
-                  marginBottom: '16px'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '12px 16px',
-                    background: '#1a1a1a',
-                    borderBottom: '1px solid #333'
-                  }}>
-                    <div>
-                      <span style={{ color: '#ff3366', fontWeight: 'bold' }}>🎬 Reproduciendo:</span>
-                      <span style={{ marginLeft: '8px', color: '#fff' }}>{seriesTitle || 'Serie'}</span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setSeriesUrl(null);
-                        setSeriesTitle(null);
-                      }}
-                      style={{
-                        background: '#333',
-                        border: 'none',
-                        color: '#fff',
-                        padding: '6px 12px',
-                        borderRadius: '20px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      ✖ Cerrar
-                    </button>
-                  </div>
-                  <div style={{ position: 'relative', aspectRatio: '16/9', background: '#000' }}>
-                    {seriesUrl.includes('youtube.com') || seriesUrl.includes('youtu.be') ? (
-                      <iframe
-                        ref={iframeRef}
-                        src={getYouTubeEmbedUrl(seriesUrl) || seriesUrl}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          border: 'none'
-                        }}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        title="Series Player"
-                      />
-                    ) : (
-                      // Para Plex, Pluto, etc. - usar video nativo
-                      <video
-                        src={seriesUrl}
-                        controls
-                        autoPlay
-                        style={{ width: '100%', height: '100%', background: '#000' }}
-                        onError={() => {
-                          console.error('Error reproduciendo:', seriesUrl);
-                          alert('No se pudo reproducir el contenido. Verificá la URL.');
-                        }}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Sección de series */}
-            <SeriesSection onPlaySerie={handlePlaySerie} />
+          <main className="series-area">
+            <SeriesHub 
+              onPlayChannel={(newChannel) => {
+                // Cuando se selecciona una serie/capítulo, cambiar a la pestaña TV
+                setCurrentChannel(newChannel);
+                setActiveTab('tv');
+              }}
+              onClose={() => {
+                // Opcional: volver a la pestaña de TV
+                setActiveTab('tv');
+              }}
+            />
           </main>
         )}
       </div>
@@ -244,8 +151,8 @@ function App() {
       <footer className="app-footer">
         <p>
           {activeTab === 'tv' 
-            ? 'Canales actualizados desde iptv-org | Usá las flechas para navegar'
-            : '🎬 Pegá cualquier URL de YouTube, Plex o Pluto TV | Series recomendadas disponibles'}
+            ? `📡 ${channels.length} canales disponibles · Hacé clic en cualquier canal para reproducir`
+            : '🎬 Explorá series, programas y canales bajo demanda · Hacé clic en cualquier contenido para reproducirlo'}
         </p>
       </footer>
     </div>

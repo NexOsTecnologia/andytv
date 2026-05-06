@@ -23,7 +23,6 @@ export const ChannelList: React.FC<ChannelListProps> = ({
   const filteredChannels = useMemo(() => {
     let result = channels;
     
-    // Filtrar por búsqueda
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       result = result.filter(ch => 
@@ -32,7 +31,6 @@ export const ChannelList: React.FC<ChannelListProps> = ({
       );
     }
     
-    // Filtrar por favoritos
     if (filter === 'favorites') {
       result = result.filter(ch => favorites.has(ch.id));
     }
@@ -40,7 +38,6 @@ export const ChannelList: React.FC<ChannelListProps> = ({
     return result;
   }, [channels, searchTerm, filter, favorites]);
 
-  // Agrupar canales
   const groupedChannels = useMemo(() => {
     const groups: { [key: string]: Channel[] } = {};
     filteredChannels.forEach(channel => {
@@ -113,6 +110,11 @@ export const ChannelList: React.FC<ChannelListProps> = ({
             ))}
           </div>
         ))}
+        {filteredChannels.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+            No se encontraron canales
+          </div>
+        )}
       </div>
     </div>
   );

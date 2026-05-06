@@ -1,0 +1,11 @@
+src/
+├── data/
+│   ├── channels.ts               # (modificado) Ahora con listas locales y prioridades
+│   ├── localPlaylists.ts         # (nuevo) Definición de listas M3U locales
+│   └── index.ts                  # (nuevo) Exportaciones
+├── hooks/
+│   ├── useChannels.ts            # (modificado) Carga con fallback a listas locales
+│   └── useTitanSDK.ts            # (nuevo) Hook para usar el SDK nativo de Titan OS
+├── components/
+│   └── VideoPlayer.tsx           # (modificado) Usará el reproductor nativo en Titan OS
+└── App.tsx                       # (modificado) Inicializa el SDK de Titan
